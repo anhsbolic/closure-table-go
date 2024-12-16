@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"github.com/anhsbolic/closure-table-go/model/domain"
 	"github.com/anhsbolic/closure-table-go/model/dto"
@@ -33,7 +34,7 @@ func NewNodeService(
 	}
 }
 
-func (service *NodeServiceImpl) Create(ctx *fiber.Ctx, request dto.NodeCreateRequest) (dto.NodeCreatedResponse, error) {
+func (service *NodeServiceImpl) Create(ctx context.Context, request dto.NodeCreateRequest) (dto.NodeCreatedResponse, error) {
 	// Validate request
 	err := service.Validate.Struct(request)
 	if err != nil {
@@ -42,7 +43,10 @@ func (service *NodeServiceImpl) Create(ctx *fiber.Ctx, request dto.NodeCreateReq
 
 	// Check Ancestor Node
 	if request.AncestorID != nil {
-		isAncestorNodeExist := service.NodeRepository.CheckByID(ctx, service.DB, *request.AncestorID)
+		isAncestorNodeExist, err := service.NodeRepository.CheckByID(ctx, service.DB, *request.AncestorID)
+		if err != nil {
+			return dto.NodeCreatedResponse{}, err
+		}
 		if !isAncestorNodeExist {
 			return dto.NodeCreatedResponse{}, fiber.NewError(
 				fiber.StatusUnprocessableEntity,
@@ -72,7 +76,10 @@ func (service *NodeServiceImpl) Create(ctx *fiber.Ctx, request dto.NodeCreateReq
 		Description: description,
 		CreatedAt:   sql.NullTime{Time: time.Now(), Valid: true},
 	}
-	createdNode := service.NodeRepository.Create(ctx, tx, node)
+	createdNode, err := service.NodeRepository.Create(ctx, tx, node)
+	if err != nil {
+		return dto.NodeCreatedResponse{}, err
+	}
 
 	// Save NodeClosure : Self Reference
 	closure := domain.NodeClosure{
@@ -80,12 +87,18 @@ func (service *NodeServiceImpl) Create(ctx *fiber.Ctx, request dto.NodeCreateReq
 		Descendant: createdNode.ID,
 		Depth:      0,
 	}
-	service.NodeClosureRepository.Save(ctx, tx, closure)
+	_, err = service.NodeClosureRepository.Save(ctx, tx, closure)
+	if err != nil {
+		return dto.NodeCreatedResponse{}, err
+	}
 
 	// When Node Have Ancestor
 	if request.AncestorID != nil {
 		// Get Ancestor Closures
-		ancestorClosures := service.NodeClosureRepository.FindByDescendant(ctx, service.DB, *request.AncestorID)
+		ancestorClosures, err := service.NodeClosureRepository.FindByDescendant(ctx, service.DB, *request.AncestorID)
+		if err != nil {
+			return dto.NodeCreatedResponse{}, err
+		}
 
 		// Save NodeClosure : Ancestor Reference
 		depth := 1
@@ -95,7 +108,10 @@ func (service *NodeServiceImpl) Create(ctx *fiber.Ctx, request dto.NodeCreateReq
 				Descendant: createdNode.ID,
 				Depth:      depth,
 			}
-			service.NodeClosureRepository.Save(ctx, tx, closure)
+			_, err := service.NodeClosureRepository.Save(ctx, tx, closure)
+			if err != nil {
+				return dto.NodeCreatedResponse{}, err
+			}
 			depth++
 		}
 	}
@@ -104,17 +120,23 @@ func (service *NodeServiceImpl) Create(ctx *fiber.Ctx, request dto.NodeCreateReq
 	return dto.ToNodeCreatedResponse(createdNode), nil
 }
 
-func (service *NodeServiceImpl) RootList(ctx *fiber.Ctx) ([]dto.NodeResponse, error) {
+func (service *NodeServiceImpl) RootList(ctx context.Context) ([]dto.NodeResponse, error) {
 	// Get Root Nodes
-	rootNodes := service.NodeRepository.GetRootList(ctx, service.DB)
+	rootNodes, err := service.NodeRepository.GetRootList(ctx, service.DB)
+	if err != nil {
+		return []dto.NodeResponse{}, err
+	}
 
 	// return response
 	return dto.ToNodePaginationResponse(rootNodes), nil
 }
 
-func (service *NodeServiceImpl) DetailNode(ctx *fiber.Ctx, nodeId string) (dto.NodeResponse, error) {
+func (service *NodeServiceImpl) DetailNode(ctx context.Context, nodeId string) (dto.NodeResponse, error) {
 	// Get Node By ID
-	node := service.NodeRepository.DetailByID(ctx, service.DB, nodeId)
+	node, err := service.NodeRepository.DetailByID(ctx, service.DB, nodeId)
+	if err != nil {
+		return dto.NodeResponse{}, err
+	}
 	if node.ID == uuid.Nil {
 		return dto.NodeResponse{}, fiber.ErrNotFound
 	}
@@ -123,15 +145,18 @@ func (service *NodeServiceImpl) DetailNode(ctx *fiber.Ctx, nodeId string) (dto.N
 	return dto.ToNodeDetailResponse(node), nil
 }
 
-func (service *NodeServiceImpl) UpdateNode(ctx *fiber.Ctx, nodeId string, request dto.NodeUpdateRequest) (dto.NodeResponse, error) {
+func (service *NodeServiceImpl) UpdateNode(ctx context.Context, nodeId string, request dto.NodeUpdateRequest) (dto.NodeResponse, error) {
 	// Get Detail Node By ID
-	node := service.NodeRepository.DetailByID(ctx, service.DB, nodeId)
+	node, err := service.NodeRepository.DetailByID(ctx, service.DB, nodeId)
+	if err != nil {
+		return dto.NodeResponse{}, err
+	}
 	if node.ID == uuid.Nil {
 		return dto.NodeResponse{}, fiber.ErrNotFound
 	}
 
 	// Validate request
-	err := service.Validate.Struct(request)
+	err = service.Validate.Struct(request)
 	if err != nil {
 		return dto.NodeResponse{}, fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -152,15 +177,21 @@ func (service *NodeServiceImpl) UpdateNode(ctx *fiber.Ctx, nodeId string, reques
 		node.Description = sql.NullString{String: *request.Description, Valid: true}
 	}
 	node.UpdatedAt = sql.NullTime{Time: time.Now(), Valid: true}
-	updatedNode := service.NodeRepository.Update(ctx, tx, nodeId, node)
+	updatedNode, err := service.NodeRepository.Update(ctx, tx, nodeId, node)
+	if err != nil {
+		return dto.NodeResponse{}, err
+	}
 
 	// return response
 	return dto.ToNodeDetailResponse(updatedNode), nil
 }
 
-func (service *NodeServiceImpl) DeleteNode(ctx *fiber.Ctx, nodeId string) error {
+func (service *NodeServiceImpl) DeleteNode(ctx context.Context, nodeId string) error {
 	// Check Node By ID
-	isNodeExist := service.NodeRepository.CheckByID(ctx, service.DB, nodeId)
+	isNodeExist, err := service.NodeRepository.CheckByID(ctx, service.DB, nodeId)
+	if err != nil {
+		return err
+	}
 	if !isNodeExist {
 		return fiber.ErrNotFound
 	}
@@ -175,47 +206,68 @@ func (service *NodeServiceImpl) DeleteNode(ctx *fiber.Ctx, nodeId string) error 
 	defer pkg.CommitOrRollback(tx)
 
 	// Get Descendant IDs
-	descendantIds := service.NodeClosureRepository.FindDescendantIdsByAncestor(ctx, tx, nodeId)
+	descendantIds, err := service.NodeClosureRepository.FindDescendantIdsByAncestor(ctx, tx, nodeId)
+	if err != nil {
+		return err
+	}
 
 	// Delete Node Closure : Self with All Descendants
-	_ = service.NodeClosureRepository.DeleteByDescendantIds(ctx, tx, descendantIds)
+	err = service.NodeClosureRepository.DeleteByDescendantIds(ctx, tx, descendantIds)
+	if err != nil {
+		return err
+	}
 
 	// Delete Node with All Descendants
-	_ = service.NodeRepository.DeleteByDescendantIds(ctx, tx, descendantIds)
+	err = service.NodeRepository.DeleteByDescendantIds(ctx, tx, descendantIds)
+	if err != nil {
+		return err
+	}
 
 	// return response
 	return nil
 }
 
-func (service *NodeServiceImpl) DescendantList(ctx *fiber.Ctx, nodeId string) ([]dto.NodeResponse, error) {
+func (service *NodeServiceImpl) DescendantList(ctx context.Context, nodeId string) ([]dto.NodeResponse, error) {
 	// Check Node By ID
-	isNodeExist := service.NodeRepository.CheckByID(ctx, service.DB, nodeId)
+	isNodeExist, err := service.NodeRepository.CheckByID(ctx, service.DB, nodeId)
+	if err != nil {
+		return []dto.NodeResponse{}, err
+	}
 	if !isNodeExist {
 		return []dto.NodeResponse{}, fiber.ErrNotFound
 	}
 
 	// Get Descendant Nodes
-	descendantNodes := service.NodeRepository.GetDescendantList(ctx, service.DB, nodeId)
+	descendantNodes, err := service.NodeRepository.GetDescendantList(ctx, service.DB, nodeId)
+	if err != nil {
+		return []dto.NodeResponse{}, err
+	}
 
 	// return response
 	return dto.ToNodePaginationResponse(descendantNodes), nil
 }
 
-func (service *NodeServiceImpl) MoveNode(ctx *fiber.Ctx, nodeId string, request dto.NodeMoveRequest) error {
+func (service *NodeServiceImpl) MoveNode(ctx context.Context, nodeId string, request dto.NodeMoveRequest) error {
 	// Check Node By ID
-	isNodeExist := service.NodeRepository.CheckByID(ctx, service.DB, nodeId)
+	isNodeExist, err := service.NodeRepository.CheckByID(ctx, service.DB, nodeId)
+	if err != nil {
+		return err
+	}
 	if !isNodeExist {
 		return fiber.ErrNotFound
 	}
 
 	// Validate request
-	err := service.Validate.Struct(request)
+	err = service.Validate.Struct(request)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	// Check Ancestor Node
-	isAncestorNodeExist := service.NodeRepository.CheckByID(ctx, service.DB, request.ToAncestorID)
+	isAncestorNodeExist, err := service.NodeRepository.CheckByID(ctx, service.DB, request.ToAncestorID)
+	if err != nil {
+		return err
+	}
 	if !isAncestorNodeExist {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Ancestor node is not found")
 	}
@@ -230,17 +282,29 @@ func (service *NodeServiceImpl) MoveNode(ctx *fiber.Ctx, nodeId string, request 
 	defer pkg.CommitOrRollback(tx)
 
 	// Get New Path For Node
-	newClosures := service.NodeClosureRepository.GetNewClosures(ctx, tx, nodeId, request.ToAncestorID)
+	newClosures, err := service.NodeClosureRepository.GetNewClosures(ctx, tx, nodeId, request.ToAncestorID)
+	if err != nil {
+		return err
+	}
 
 	// Get Descendant IDs
-	descendantIds := service.NodeClosureRepository.FindDescendantIdsByAncestor(ctx, tx, nodeId)
+	descendantIds, err := service.NodeClosureRepository.FindDescendantIdsByAncestor(ctx, tx, nodeId)
+	if err != nil {
+		return err
+	}
 
 	// Delete Node Closure : Self with All Descendants
-	_ = service.NodeClosureRepository.DeleteByDescendantIds(ctx, tx, descendantIds)
+	err = service.NodeClosureRepository.DeleteByDescendantIds(ctx, tx, descendantIds)
+	if err != nil {
+		return err
+	}
 
 	// Save New Node Closure For Self and All Descendants Under New Ancestor
 	for _, closure := range newClosures {
-		service.NodeClosureRepository.Save(ctx, tx, closure)
+		_, err := service.NodeClosureRepository.Save(ctx, tx, closure)
+		if err != nil {
+			return err
+		}
 	}
 
 	// return success

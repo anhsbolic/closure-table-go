@@ -23,7 +23,7 @@ func (controller *NodeControllerImpl) Create(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	result, err := controller.NodeService.Create(ctx, *request)
+	result, err := controller.NodeService.Create(ctx.UserContext(), *request)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (controller *NodeControllerImpl) Create(ctx *fiber.Ctx) error {
 }
 
 func (controller *NodeControllerImpl) RootList(ctx *fiber.Ctx) error {
-	result, err := controller.NodeService.RootList(ctx)
+	result, err := controller.NodeService.RootList(ctx.UserContext())
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (controller *NodeControllerImpl) RootList(ctx *fiber.Ctx) error {
 
 func (controller *NodeControllerImpl) DetailNode(ctx *fiber.Ctx) error {
 	nodeId := ctx.Params("nodeId")
-	result, err := controller.NodeService.DetailNode(ctx, nodeId)
+	result, err := controller.NodeService.DetailNode(ctx.UserContext(), nodeId)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (controller *NodeControllerImpl) UpdateNode(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	result, err := controller.NodeService.UpdateNode(ctx, nodeId, *request)
+	result, err := controller.NodeService.UpdateNode(ctx.UserContext(), nodeId, *request)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (controller *NodeControllerImpl) UpdateNode(ctx *fiber.Ctx) error {
 
 func (controller *NodeControllerImpl) DeleteNode(ctx *fiber.Ctx) error {
 	nodeId := ctx.Params("nodeId")
-	err := controller.NodeService.DeleteNode(ctx, nodeId)
+	err := controller.NodeService.DeleteNode(ctx.UserContext(), nodeId)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (controller *NodeControllerImpl) DeleteNode(ctx *fiber.Ctx) error {
 
 func (controller *NodeControllerImpl) DescendantList(ctx *fiber.Ctx) error {
 	nodeId := ctx.Params("nodeId")
-	result, err := controller.NodeService.DescendantList(ctx, nodeId)
+	result, err := controller.NodeService.DescendantList(ctx.UserContext(), nodeId)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (controller *NodeControllerImpl) MoveNode(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	err = controller.NodeService.MoveNode(ctx, nodeId, *request)
+	err = controller.NodeService.MoveNode(ctx.UserContext(), nodeId, *request)
 	if err != nil {
 		return err
 	}
