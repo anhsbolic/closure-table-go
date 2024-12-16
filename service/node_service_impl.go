@@ -1,11 +1,11 @@
 package service
 
 import (
-	"closure-table-go/model/domain"
-	"closure-table-go/model/dto"
-	"closure-table-go/pkg"
-	"closure-table-go/repository"
 	"database/sql"
+	"github.com/anhsbolic/closure-table-go/model/domain"
+	"github.com/anhsbolic/closure-table-go/model/dto"
+	"github.com/anhsbolic/closure-table-go/pkg"
+	"github.com/anhsbolic/closure-table-go/repository"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"

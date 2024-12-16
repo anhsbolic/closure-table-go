@@ -1,7 +1,7 @@
 package pkg
 
 import (
-	"closure-table-go/config"
+	"github.com/anhsbolic/closure-table-go/config"
 	"github.com/sirupsen/logrus"
 	"os"
 )

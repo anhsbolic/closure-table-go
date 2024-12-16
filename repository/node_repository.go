@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"closure-table-go/model/domain"
 	"database/sql"
+	"github.com/anhsbolic/closure-table-go/model/domain"
 	"github.com/gofiber/fiber/v2"
 )
 

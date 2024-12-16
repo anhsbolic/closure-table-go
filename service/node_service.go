@@ -1,7 +1,7 @@
 package service
 
 import (
-	"closure-table-go/model/dto"
+	"github.com/anhsbolic/closure-table-go/model/dto"
 	"github.com/gofiber/fiber/v2"
 )
 

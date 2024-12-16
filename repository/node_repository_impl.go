@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"closure-table-go/model/domain"
-	"closure-table-go/pkg"
 	"database/sql"
+	"github.com/anhsbolic/closure-table-go/model/domain"
+	"github.com/anhsbolic/closure-table-go/pkg"
 	"github.com/gofiber/fiber/v2"
 	"github.com/lib/pq"
 )

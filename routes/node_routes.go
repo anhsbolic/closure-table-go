@@ -1,10 +1,10 @@
 package routes
 
 import (
-	"closure-table-go/controller"
-	"closure-table-go/repository"
-	"closure-table-go/service"
 	"database/sql"
+	"github.com/anhsbolic/closure-table-go/controller"
+	"github.com/anhsbolic/closure-table-go/repository"
+	"github.com/anhsbolic/closure-table-go/service"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )

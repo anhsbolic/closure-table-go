@@ -1,9 +1,9 @@
 package pkg
 
 import (
-	"closure-table-go/config"
 	"context"
 	"fmt"
+	"github.com/anhsbolic/closure-table-go/config"
 	"github.com/redis/go-redis/v9"
 )
 

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"closure-table-go/config"
-	"closure-table-go/middleware"
-	"closure-table-go/pkg"
-	"closure-table-go/routes"
 	"fmt"
+	"github.com/anhsbolic/closure-table-go/config"
+	"github.com/anhsbolic/closure-table-go/middleware"
+	"github.com/anhsbolic/closure-table-go/pkg"
+	"github.com/anhsbolic/closure-table-go/routes"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"time"

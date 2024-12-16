@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"closure-table-go/config"
-	"closure-table-go/model/dto"
+	"github.com/anhsbolic/closure-table-go/config"
+	"github.com/anhsbolic/closure-table-go/model/dto"
 	"github.com/gofiber/fiber/v2"
 )
 

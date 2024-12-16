@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"closure-table-go/model/dto"
-	"closure-table-go/service"
+	"github.com/anhsbolic/closure-table-go/model/dto"
+	"github.com/anhsbolic/closure-table-go/service"
 	"github.com/gofiber/fiber/v2"
 )
 

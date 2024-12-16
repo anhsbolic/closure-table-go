@@ -1,4 +1,4 @@
-module closure-table-go
+module github.com/anhsbolic/closure-table-go
 
 go 1.23.0
 

@@ -1,8 +1,8 @@
 package dto
 
 import (
-	"closure-table-go/model/domain"
-	"closure-table-go/pkg"
+	"github.com/anhsbolic/closure-table-go/model/domain"
+	"github.com/anhsbolic/closure-table-go/pkg"
 	"github.com/google/uuid"
 	"time"
 )
